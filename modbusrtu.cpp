@@ -7,8 +7,19 @@ ModBusRtu::ModBusRtu(QString comPort, qint32 comBaud, quint8 address, QObject *p
     iAddress = address;
     errorMsg = "";
 
+    timer.setSingleShot(false);
+    timer.setInterval(500);
+    connect(&timer, &QTimer::timeout, this, &ModBusRtu::timerTimeout);
+    timer.start();
+
     connect(this, &QSerialPort::readyRead, this, &ModBusRtu::receiveHandler);
-    connect(this, QSerialPort::errorOccurred(QSerialPort::SerialPortError error), this, serialErrorSlot(QSerialPort::SerialPortError error));
+    connect(this, &QSerialPort::errorOccurred, this, &ModBusRtu::serialErrorSlot);
+
+    bPortIsOpen = this->open(QIODevice::ReadWrite);
+    if(!bPortIsOpen) {
+        errorMsg = QSerialPort::errorString();
+        emit errorOccurred();
+    }
 
 }
 
@@ -33,6 +44,14 @@ QString ModBusRtu::errorString() {
         }
     }
     return errorMsg;
+}
+
+void ModBusRtu::addValue(quint16 addr, quint16 value) {
+    dataTable.insert(addr, value);
+}
+
+quint16 ModBusRtu::getValue(quint16 addr) {
+    return dataTable.value(addr, 0);
 }
 
 // private slot
@@ -64,6 +83,8 @@ void ModBusRtu::receiveHandler() {
     case WRITE:
         if(package.length() == 8) {
             value = (package.at(4) << 8) | package.at(5);
+            dataTable.insert(reg, value);
+            changedData.insert(reg, value);
         } else {
             errorMsg = "Modbus receive: Package length is not equals 8!";
             emit errorOccurred();
@@ -72,9 +93,14 @@ void ModBusRtu::receiveHandler() {
         break;
     }
 
-
 }
 
+void ModBusRtu::serialErrorSlot(QSerialPort::SerialPortError error) {
+    errorMsg = QSerialPort::errorString();
+    emit errorOccurred();
+}
+
+// private
 quint16 ModBusRtu::CRC16(QByteArray &p)
 {
         if(p.length() > 255) return 0;
@@ -93,4 +119,10 @@ quint16 ModBusRtu::CRC16(QByteArray &p)
 
 
         return ((crc_hi << 8) | crc_lo);
+}
+
+void ModBusRtu::timerTimeout() {
+    if(this->isOpen() != bPortIsOpen) {
+        emit portStateChanged(this->isOpen());
+    }
 }

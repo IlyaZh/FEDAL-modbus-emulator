@@ -5,6 +5,7 @@
 #include <QSerialPort>
 #include <QSerialPortInfo>
 #include <QMap>
+#include <QTimer>
 
 class ModBusRtu : public QSerialPort
 {
@@ -15,17 +16,21 @@ public:
     QMap<quint16, quint16> getChanges();
     quint8 getAddress();
     QString errorString();
+    void addValue(quint16 addr, quint16 value);
+    quint16 getValue(quint16 addr);
 
 
 signals:
     void dataHasChanged();
     void errorOccurred();
+    void portStateChanged(bool);
 
 public slots:
 
 private slots:
     void receiveHandler();
     void serialErrorSlot(QSerialPort::SerialPortError error);
+    void timerTimeout();
 
 private:
     QMap<quint16, quint16> changedData;
@@ -33,6 +38,8 @@ private:
     quint8 iAddress;
     quint16 CRC16(QByteArray &p);
     QString errorMsg;
+    QTimer timer;
+    bool bPortIsOpen;
 
     const quint8 auchCRCHi[256]=
     {
