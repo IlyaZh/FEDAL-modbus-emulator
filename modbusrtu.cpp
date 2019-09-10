@@ -40,7 +40,7 @@ QString ModBusRtu::errorString() {
     if(errorMsg.isEmpty()) {
         QString serialError = QSerialPort::errorString();
         if(!serialError.isEmpty()) {
-           return serialError;
+            return serialError;
         }
     }
     return errorMsg;
@@ -56,9 +56,9 @@ quint16 ModBusRtu::getValue(quint16 addr) {
 
 // private slot
 void ModBusRtu::receiveHandler() {
-    quint8 addr;
+    char addr;
     quint16 reg;
-    quint8 comm;
+    char comm;
     quint16 value;
 
     QByteArray package = readAll();
@@ -77,20 +77,47 @@ void ModBusRtu::receiveHandler() {
         return;
     }
 
+    if(package.length() != 8) {
+        errorMsg = "Modbus receive: Package length is not equals 8!";
+        emit errorOccurred();
+    }
+    value = (package.at(4) << 8) | package.at(5);
+    QByteArray answer;
+
     switch(comm) {
     case READ:
+        answer.append(addr);
+        answer.append(comm);
+        answer.append(2*value);
+        for(int i = 0; i < value; i++) {
+
+        }
         break;
     case WRITE:
-        if(package.length() == 8) {
-            value = (package.at(4) << 8) | package.at(5);
-            dataTable.insert(reg, value);
-            changedData.insert(reg, value);
-        } else {
-            errorMsg = "Modbus receive: Package length is not equals 8!";
-            emit errorOccurred();
-        }
+        dataTable.insert(reg, value);
+        changedData.insert(reg, value);
 
+
+        answer.append(addr);
+        answer.append(comm);
+        answer.append(static_cast<char>(reg>>8));
+        answer.append(static_cast<char>(reg&0xff));
+        answer.append(static_cast<char>(value>>8));
+        answer.append(static_cast<char>(value&0xff));
         break;
+    default:
+        return;
+    }
+    crc = CRC16(answer);
+    answer.append(static_cast<char>(crc>>8));
+    answer.append(static_cast<char>(crc&0xff));
+
+    qint64 bytesSent = this->write(answer);
+    if(bytesSent == answer.length()) {
+        emit dataTransfered(bytesSent);
+    } else {
+        errorMsg = "Some bytes hasn't transfered!";
+        emit errorOccurred();
     }
 
 }
@@ -103,22 +130,22 @@ void ModBusRtu::serialErrorSlot(QSerialPort::SerialPortError error) {
 // private
 quint16 ModBusRtu::CRC16(QByteArray &p)
 {
-        if(p.length() > 255) return 0;
+    if(p.length() > 255) return 0;
 
-        quint8 crc_hi;
-        quint8 crc_lo;
+    quint8 crc_hi;
+    quint8 crc_lo;
 
-        crc_hi = 0xFF;   // high byte of CRC initialized
-        crc_lo = 0xFF;   // low byte of CRC initialized
+    crc_hi = 0xFF;   // high byte of CRC initialized
+    crc_lo = 0xFF;   // low byte of CRC initialized
 
-        foreach(char item, p) {
-            quint8 i = crc_hi ^ item;        // will index into CRC lookup table
-            crc_hi = crc_lo ^ (auchCRCHi[i]);    // calculate the CRC
-            crc_lo =          (auchCRCLo[i]);
-        }
+    foreach(char item, p) {
+        quint8 i = crc_hi ^ item;        // will index into CRC lookup table
+        crc_hi = crc_lo ^ (auchCRCHi[i]);    // calculate the CRC
+        crc_lo =          (auchCRCLo[i]);
+    }
 
 
-        return ((crc_hi << 8) | crc_lo);
+    return ((crc_hi << 8) | crc_lo);
 }
 
 void ModBusRtu::timerTimeout() {

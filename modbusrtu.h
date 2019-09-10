@@ -24,6 +24,7 @@ signals:
     void dataHasChanged();
     void errorOccurred();
     void portStateChanged(bool);
+    void dataTransfered(qint64);
 
 public slots:
 
