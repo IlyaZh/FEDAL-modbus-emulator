@@ -1,0 +1,82 @@
+{
+	"Device": "SF305M",
+	"Commands": [
+		{
+			"Name": "Frequency",
+			"Divider": 10,
+			"Unit": "Hz",
+			"Value": ["0x0001", 50.5],
+			"Min": ["0x0011", 0],
+			"Max": ["0x0021", 400]
+		},
+		{
+			"Name": "Duration",
+			"Divider": 1,
+			"Unit": "uS",
+			"Value": ["0x0001", 786],
+			"Min": ["0x0011", 10],
+			"Max": ["0x0021", 1500]
+		},
+		{
+			"Name": "Current",
+			"Divider": 10,
+			"Unit": "A",
+			"Value": ["0x0003", 25.3],
+			"Min": ["0x0013", 0],
+			"Max": ["0x0023", 80]
+		},
+		{
+			"Name": "Voltage",
+			"Divider": 10,
+			"Unit": "V",
+			"Value": ["0x0004", 120],
+			"Min": ["0x0014", 0],
+			"Max": ["0x0024", 400]
+		},
+		{
+			"Name": "Delay",
+			"Divider": 1,
+			"Unit": "uS",
+			"Value": ["0x0005", 500],
+			"Min": ["0x0015", 0],
+			"Max": ["0x0025", 1500]
+		},
+		{
+			"Name": "Status",
+			"Divider": 1,
+			"Value": ["0x0007", "0x0007"]
+		},
+		{
+			"Name": "Blocks",
+			"Divider": 1,
+			"Value": ["0x0008", "0x0000"]
+		},
+		{
+			"Name": "TEC",
+			"Divider": 100,
+			"Unit": "C",
+			"Value": ["0x0101", 2000],
+			"Min": ["0x0111", 1500],
+			"Max": ["0x0121", 4000]
+		},
+		{
+			"Name": "Ts",
+			"Divider": 100,
+			"Unit": "C",
+			"Value": ["0x0102", 2000]
+
+		},
+		{
+			"Name": "Tmat",
+			"Divider": 100,
+			"Unit": "C",
+			"Value": ["0x0103", 2000]
+		},
+		{
+			"Name": "Trad",
+			"Divider": 100,
+			"Unit": "C",
+			"Value": ["0x0104", 2000]
+		}
+	]
+}

@@ -25,11 +25,13 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
+        dataparser.cpp \
         main.cpp \
         mainwindow.cpp \
         modbusrtu.cpp
 
 HEADERS += \
+        dataparser.h \
         mainwindow.h \
         modbusrtu.h
 

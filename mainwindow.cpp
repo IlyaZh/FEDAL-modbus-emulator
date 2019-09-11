@@ -9,6 +9,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     updatePorts();
+
+    DataParser dp("initial.json",this);
 }
 
 MainWindow::~MainWindow()

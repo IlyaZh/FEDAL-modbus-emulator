@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include "modbusrtu.h"
+#include "dataparser.h"
 
 #include <QDebug>
 
