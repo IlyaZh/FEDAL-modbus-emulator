@@ -18,17 +18,6 @@ public:
     explicit DataParser(QString filename, QObject *parent = nullptr);
     QString filename();
     QString errorString();
-
-
-    typedef struct {
-        QString sName;
-        QString sUnit;
-        double dDivider;
-        QPair<quint16, double> Value;
-        QPair<quint16, double> Min;
-        QPair<quint16, double> Max;
-    } CommParse_t;
-    QList<CommParse_t> getCommands();
     QMap<quint16, double> getValues();
 
 
@@ -41,9 +30,7 @@ public slots:
 private:
     QString sFilename;
     QString sErrorString;
-    QString devName;
     QMap<quint16, double> Values;
-    QList<CommParse_t> Commands;
 
 
 };

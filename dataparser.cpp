@@ -19,14 +19,16 @@ DataParser::DataParser(QString filename, QObject *parent) : QObject(parent)
                 emit errorOccurred();
                 return;
             }
+            Values.clear();
             QJsonObject jObj = jDoc.object();
-            QJsonArray jArray = jObj.value("Commands").toArray();
-            devName = jObj.value("Device").toString("No name");
-            foreach(QJsonValue item, jArray) {
-                CommParse_t comm;
+            QJsonArray commArr = jObj.value("Commands").toArray();
+            foreach(QJsonValue item, commArr) {
                 QJsonArray itemArr = item.toArray();
-                qDebug() << itemArr;
+                quint16 iComm = static_cast<quint16>(itemArr.at(0).toString().toInt(nullptr, 16));
+                quint16 iValue = static_cast<quint16>(itemArr.at(1).toInt());
+                Values.insert(iComm, iValue);
             }
+            emit parsingComplete();
         } else {
             sErrorString = file->errorString();
             emit errorOccurred();
@@ -45,4 +47,8 @@ QString DataParser::filename() {
 
 QString DataParser::errorString() {
     return sErrorString;
+}
+
+QMap<quint16, double> DataParser::getValues() {
+    return Values;
 }
