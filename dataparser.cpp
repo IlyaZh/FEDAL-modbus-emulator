@@ -12,18 +12,20 @@ DataParser::DataParser(QString filename, QObject *parent) : QObject(parent)
             QByteArray fileData = file->readAll();
             file->close();
 
-            QJsonParseError *errorPtr;
+            QJsonParseError *errorPtr = nullptr;
             QJsonDocument jDoc = QJsonDocument::fromJson(fileData, errorPtr);
             if(errorPtr != nullptr) {
                 sErrorString = errorPtr->errorString();
                 emit errorOccurred();
+                return;
             }
             QJsonObject jObj = jDoc.object();
             QJsonArray jArray = jObj.value("Commands").toArray();
-            QString devName = jObj.value("Device").toString("No name");
-            qDebug() << jDoc.isNull() << jDoc.isEmpty() << jDoc.isArray() << jDoc.isObject();
+            devName = jObj.value("Device").toString("No name");
             foreach(QJsonValue item, jArray) {
-                qDebug() << item.toVariant();
+                CommParse_t comm;
+                QJsonArray itemArr = item.toArray();
+                qDebug() << itemArr;
             }
         } else {
             sErrorString = file->errorString();

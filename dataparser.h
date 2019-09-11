@@ -19,13 +19,32 @@ public:
     QString filename();
     QString errorString();
 
+
+    typedef struct {
+        QString sName;
+        QString sUnit;
+        double dDivider;
+        QPair<quint16, double> Value;
+        QPair<quint16, double> Min;
+        QPair<quint16, double> Max;
+    } CommParse_t;
+    QList<CommParse_t> getCommands();
+    QMap<quint16, double> getValues();
+
+
+
 signals:
     void errorOccurred();
+    void parsingComplete();
 
 public slots:
 private:
     QString sFilename;
     QString sErrorString;
+    QString devName;
+    QMap<quint16, double> Values;
+    QList<CommParse_t> Commands;
+
 
 };
 
