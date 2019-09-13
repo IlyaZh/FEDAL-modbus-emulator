@@ -12,6 +12,8 @@ class ModBusRtu : public QSerialPort
     Q_OBJECT
 public:
     explicit ModBusRtu(QString comPort, qint32 comBaud, quint8 address, QObject *parent = nullptr);
+    ~ModBusRtu();
+
     static enum {WRITE = 0x06, READ = 0x03} modbusCommands;
     QMap<quint16, quint16> getChanges();
     quint8 getAddress();
@@ -20,6 +22,7 @@ public:
     void addValue(quint16 addr, quint16 value);
     quint16 getValue(quint16 addr);
     void dataToWrite(quint16 reg, quint16 value);
+    void setTimeout(quint16 timeout);
 
 
 signals:
@@ -27,21 +30,24 @@ signals:
     void errorOccurred();
     void portStateChanged(bool);
     void dataTransfered(qint64);
+    void timeout();
 
 public slots:
 
 private slots:
     void receiveHandler();
     void serialErrorSlot(QSerialPort::SerialPortError error);
-    void timerTimeout();
+    void stateTimerTimeout();
+    void timeoutTimerCallback();
 
 private:
     QMap<quint16, quint16> changedData;
     QMap<quint16, quint16> dataTable;
+    QTimer stateTimer;
     quint8 iAddress;
     quint16 CRC16(QByteArray &p);
     QString errorMsg;
-    QTimer timer;
+    QTimer timeoutTimer;
     bool bPortIsOpen;
 
     const quint8 auchCRCHi[256]=

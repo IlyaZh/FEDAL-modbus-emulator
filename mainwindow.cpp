@@ -31,11 +31,6 @@ void MainWindow::setupWindow() {
     this->setWindowTitle(WINDOW_TITLE);
     setWindowIcon(QIcon(":/FEDAL.ico"));
 
-    portIsOpen = false;
-    minLimitsIsLoaded = maxLimitsIsLoaded = false;
-    currentCommandId = 0;
-    link = false;
-
     settings = new AppSettings(this);
     settingsDialog = new SettingsDialog(this);
     pDataParser = nullptr;
@@ -117,10 +112,8 @@ void MainWindow::settingsChanged() {
 void MainWindow::onStateChanged(bool flag) {
     if(flag) {
         portIsOpen = true;
-        minLimitsIsLoaded = maxLimitsIsLoaded = false;
         buttonStateChanged(true);
         qInfo() << "Port is open: " << settings->getPortName() + QString("   ") + QString::number(settings->getBaudRate()) + " bps";
-        requestNextParam();
     } else {
         portIsOpen = false;
         buttonStateChanged(false);
@@ -137,23 +130,6 @@ void MainWindow::buttonStateChanged(bool flag) {
     } else {
         ui->connectButton->setText("Подключить COM-порт");
     }
-}
-
-void MainWindow::readReady(bool queueIsEmpty) {
-    quint16 startRegister = pModbus->getRegister();
-    if(startRegister >= readRegisters[SerialPortHandler::MIN_REGS_SHIFT] && startRegister < readRegisters[SerialPortHandler::MIN_REGS_SHIFT]+countRegisters[SerialPortHandler::MIN_REGS_SHIFT])
-        minLimitsIsLoaded = true;
-    else if (startRegister >= readRegisters[SerialPortHandler::MAX_REGS_SHIFT] && startRegister < readRegisters[SerialPortHandler::MAX_REGS_SHIFT]+countRegisters[SerialPortHandler::MAX_REGS_SHIFT])
-        maxLimitsIsLoaded = true;
-
-    for(quint8 i = 0; i < pModbus->getCount(); i++) {
-        quint16 item = pModbus->getValues().at(i);
-        setDevParam(startRegister+i, item);
-    }
-
-    pModbus->clearBuffer();
-
-    if (queueIsEmpty) requestNextParam();
 }
 
 void MainWindow::setDevParam(quint16 reg, quint16 value) {
@@ -220,31 +196,8 @@ void MainWindow::onTimeout(quint8) {
     bench->setLink(false);
     errorMessage("Timeout");
 
-    minLimitsIsLoaded = maxLimitsIsLoaded = false;
-
-    requestNextParam();
 }
 
-void MainWindow::requestNextParam() {
-    if(!portIsOpen) return;
-
-    if(maxLimitsIsLoaded == false) {
-        currentCommandId = SerialPortHandler::MAX_REGS_SHIFT;
-    }
-
-    if(minLimitsIsLoaded == false) {
-        currentCommandId = SerialPortHandler::MIN_REGS_SHIFT;
-    }
-
-    if (minLimitsIsLoaded && maxLimitsIsLoaded) {
-        currentCommandId = SerialPortHandler::VALUES_REGS_SHIFT;
-    }
-
-    if(pModbus->queueIsEmpty()) {
-        pModbus->dataToRead(readRegisters[currentCommandId], countRegisters[currentCommandId]);
-    }
-
-}
 
 void MainWindow::errorMessage(QString msg) {
     link = false;
@@ -270,16 +223,14 @@ void MainWindow::on_connectButton_clicked()
     }
 
     if(pModbus->isOpen()) {
-        pModbus->setOpenState(false);
+        pModbus->disconnect();
+        pModbus->deleteLater();
         ui->connectButton->setChecked(false);
     } else {
-        pModbus->setBaud(settings->getBaudRate());
-        pModbus->setPort(settings->getPortName());
-        pModbus->setAddress(settings->getAddress());
+        pModbus = new ModBusRtu(settings->getPortName(), settings->getBaudRate(), settings->getAddress(), this);
         pModbus->setTimeout(COM_TIMEOUT);
-        pModbus->setOpenState(true);
         if(!pModbus->isOpen()) {
-            errorMessage("Подключение неудалось");
+            errorMessage(pModbus->errorString());
             ui->connectButton->setChecked(false);
         }
     }

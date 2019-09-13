@@ -31,16 +31,11 @@ public:
 
 private:
     Ui::MainWindow *ui;
-    bool link;
     DeviceForm* bench;
     AppSettings* settings;
     SettingsDialog* settingsDialog;
     ModBusRtu *pModbus;
     DataParser *pDataParser;
-    bool portIsOpen;
-    bool minLimitsIsLoaded;
-    bool maxLimitsIsLoaded;
-    int currentCommandId;
     void setupWindow();
     void loadComData();
     void setupConnections();
@@ -53,10 +48,8 @@ public slots:
 
 private slots:
     void onStateChanged(bool);
-    void readReady(bool);
     void setDevParam(quint16, quint16);
     void onTimeout(quint8);
-    void requestNextParam();
     void errorMessage(QString);
     void on_connectButton_clicked();
     void on_settingsButton_clicked();

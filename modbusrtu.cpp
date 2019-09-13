@@ -7,10 +7,10 @@ ModBusRtu::ModBusRtu(QString comPort, qint32 comBaud, quint8 address, QObject *p
     iAddress = address;
     errorMsg = "";
 
-    timer.setSingleShot(false);
-    timer.setInterval(500);
-    connect(&timer, &QTimer::timeout, this, &ModBusRtu::timerTimeout);
-    timer.start();
+    stateTimer.setSingleShot(false);
+    stateTimer.setInterval(500);
+    connect(&stateTimer, &QTimer::timeout, this, &ModBusRtu::stateTimerTimeout);
+    stateTimer.start();
 
     connect(this, &QSerialPort::readyRead, this, &ModBusRtu::receiveHandler);
     connect(this, &QSerialPort::errorOccurred, this, &ModBusRtu::serialErrorSlot);
@@ -21,6 +21,15 @@ ModBusRtu::ModBusRtu(QString comPort, qint32 comBaud, quint8 address, QObject *p
         emit errorOccurred();
     }
 
+    timeoutTimer.setSingleShot(true);
+    timeoutTimer.setInterval(200);
+
+}
+
+ModBusRtu::~ModBusRtu() {
+    if(this->isOpen()) {
+        this->close();
+    }
 }
 
 QMap<quint16, quint16> ModBusRtu::getChanges() {
@@ -60,6 +69,10 @@ quint16 ModBusRtu::getValue(quint16 addr) {
 
 void ModBusRtu::dataToWrite(quint16 reg, quint16 value) {
     // TODO: do this
+}
+
+void ModBusRtu::setTimeout(quint16 timeout) {
+    timeouTtimer.setInterval(timeout);
 }
 
 // private slot
@@ -156,8 +169,13 @@ quint16 ModBusRtu::CRC16(QByteArray &p)
     return ((crc_hi << 8) | crc_lo);
 }
 
-void ModBusRtu::timerTimeout() {
+void ModBusRtu::stateTimerTimeout() {
     if(this->isOpen() != bPortIsOpen) {
         emit portStateChanged(this->isOpen());
     }
+}
+
+void ModBusRtu::timeoutTimerCallback() {
+    // TODO: timeout for modbus
+    emit timeout();
 }
