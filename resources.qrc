@@ -1,5 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>refresh.png</file>
+        <file>FEDAL.ico</file>
+        <file>FEDAL.png</file>
     </qresource>
 </RCC>

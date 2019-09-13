@@ -10,6 +10,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = fedal-modbus-emulator
 TEMPLATE = app
+VERSION = 1.1.0
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
@@ -25,18 +26,27 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
+        appsettings.cpp \
         dataparser.cpp \
+        deviceform.cpp \
         main.cpp \
         mainwindow.cpp \
-        modbusrtu.cpp
+        modbusrtu.cpp \
+        settingsdialog.cpp
 
 HEADERS += \
+        appsettings.h \
         dataparser.h \
+        deviceform.h \
+        globals.h \
         mainwindow.h \
-        modbusrtu.h
+        modbusrtu.h \
+        settingsdialog.h
 
 FORMS += \
-        mainwindow.ui
+        deviceform.ui \
+        mainwindow.ui \
+        settingsdialog.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -45,3 +55,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 RESOURCES += \
     resources.qrc
+
+RC_ICONS = FEDAL.ico

@@ -11,6 +11,7 @@ DataParser::DataParser(QString filename, QObject *parent) : QObject(parent)
         if(file->open(QIODevice::ReadOnly)) {
             QByteArray fileData = file->readAll();
             file->close();
+            file->deleteLater();
 
             QJsonParseError *errorPtr = nullptr;
             QJsonDocument jDoc = QJsonDocument::fromJson(fileData, errorPtr);
