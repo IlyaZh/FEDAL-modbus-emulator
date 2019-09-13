@@ -15,9 +15,11 @@ public:
     static enum {WRITE = 0x06, READ = 0x03} modbusCommands;
     QMap<quint16, quint16> getChanges();
     quint8 getAddress();
+    void setAddress(quint8 address);
     QString errorString();
     void addValue(quint16 addr, quint16 value);
     quint16 getValue(quint16 addr);
+    void dataToWrite(quint16 reg, quint16 value);
 
 
 signals:

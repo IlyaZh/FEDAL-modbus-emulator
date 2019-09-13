@@ -36,6 +36,10 @@ quint8 ModBusRtu::getAddress() {
     return iAddress;
 }
 
+void ModBusRtu::setAddress(quint8 address) {
+    iAddress = address;
+}
+
 QString ModBusRtu::errorString() {
     if(errorMsg.isEmpty()) {
         QString serialError = QSerialPort::errorString();
@@ -52,6 +56,10 @@ void ModBusRtu::addValue(quint16 addr, quint16 value) {
 
 quint16 ModBusRtu::getValue(quint16 addr) {
     return dataTable.value(addr, 0);
+}
+
+void ModBusRtu::dataToWrite(quint16 reg, quint16 value) {
+    // TODO: do this
 }
 
 // private slot
@@ -112,7 +120,7 @@ void ModBusRtu::receiveHandler() {
     answer.append(static_cast<char>(crc>>8));
     answer.append(static_cast<char>(crc&0xff));
 
-    qint64 bytesSent = this->write(answer);
+    qint64 bytesSent = QSerialPort::write(answer);
     if(bytesSent == answer.length()) {
         emit dataTransfered(bytesSent);
     } else {

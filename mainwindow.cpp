@@ -39,7 +39,7 @@ void MainWindow::setupWindow() {
     settings = new AppSettings(this);
     settingsDialog = new SettingsDialog(this);
     pDataParser = nullptr;
-    pModbus = ;
+    pModbus = nullptr;
 
     readSettings();
 
@@ -103,11 +103,11 @@ bool MainWindow::maybeSave() {
 void MainWindow::settingsChanged() {
     if(pModbus != nullptr) {
         if(pModbus->isOpen()) {
-            pModbus->setOpenState(false);
-            pModbus->setPort(settings->getPortName());
-            pModbus->setBaud(settings->getBaudRate());
+            pModbus->close();
+            pModbus->setPortName(settings->getPortName());
+            pModbus->setBaudRate(settings->getBaudRate());
             pModbus->setAddress(settings->getAddress());
-            pModbus->setOpenState(true);
+            pModbus->open(QIODevice::ReadWrite);
         }
     }
     loadComData();
