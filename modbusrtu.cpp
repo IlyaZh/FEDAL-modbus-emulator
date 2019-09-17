@@ -1,10 +1,7 @@
 #include "modbusrtu.h"
 
-ModBusRtu::ModBusRtu(QString comPort, qint32 comBaud, quint8 address, QObject *parent) : QSerialPort(parent)
+ModBusRtu::ModBusRtu(QObject *parent) : QSerialPort(parent)
 {
-    this->setPortName(comPort);
-    this->setBaudRate(comBaud);
-    iAddress = address;
     errorMsg = "";
 
     stateTimer.setSingleShot(false);
@@ -15,14 +12,9 @@ ModBusRtu::ModBusRtu(QString comPort, qint32 comBaud, quint8 address, QObject *p
     connect(this, &QSerialPort::readyRead, this, &ModBusRtu::receiveHandler);
     connect(this, &QSerialPort::errorOccurred, this, &ModBusRtu::serialErrorSlot);
 
-    bPortIsOpen = this->open(QIODevice::ReadWrite);
-    if(!bPortIsOpen) {
-        errorMsg = QSerialPort::errorString();
-        emit errorOccurred();
-    }
-
-    timeoutTimer.setSingleShot(true);
-    timeoutTimer.setInterval(200);
+    modbusTimer.setSingleShot(true);
+    modbusTimer.setInterval(200);
+    connect(&modbusTimer, &QTimer::timeout, this, &ModBusRtu::modbusTimeout);
 
 }
 
@@ -69,10 +61,11 @@ quint16 ModBusRtu::getValue(quint16 addr) {
 
 void ModBusRtu::dataToWrite(quint16 reg, quint16 value) {
     // TODO: do this
+    qDebug() << reg << value;
 }
 
 void ModBusRtu::setTimeout(quint16 timeout) {
-    timeouTtimer.setInterval(timeout);
+    modbusTimer.setInterval(timeout);
 }
 
 // private slot
@@ -118,7 +111,6 @@ void ModBusRtu::receiveHandler() {
         dataTable.insert(reg, value);
         changedData.insert(reg, value);
 
-
         answer.append(addr);
         answer.append(comm);
         answer.append(static_cast<char>(reg>>8));
@@ -136,6 +128,7 @@ void ModBusRtu::receiveHandler() {
     qint64 bytesSent = QSerialPort::write(answer);
     if(bytesSent == answer.length()) {
         emit dataTransfered(bytesSent);
+        modbusTimer.start();
     } else {
         errorMsg = "Some bytes hasn't transfered!";
         emit errorOccurred();
@@ -170,12 +163,13 @@ quint16 ModBusRtu::CRC16(QByteArray &p)
 }
 
 void ModBusRtu::stateTimerTimeout() {
-    if(this->isOpen() != bPortIsOpen) {
-        emit portStateChanged(this->isOpen());
-    }
+    qDebug() << "tmr" << endl;
+//    if(this->isOpen() != bPortIsOpen) {
+//        emit portStateChanged(this->isOpen());
+//    }
 }
 
-void ModBusRtu::timeoutTimerCallback() {
+void ModBusRtu::modbusTimeout() {
     // TODO: timeout for modbus
     emit timeout();
 }

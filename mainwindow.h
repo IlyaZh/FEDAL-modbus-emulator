@@ -48,7 +48,7 @@ public slots:
 
 private slots:
     void onStateChanged(bool);
-    void setDevParam(quint16, quint16);
+//    void setDevParam(quint16, quint16);
     void onTimeout(quint8);
     void errorMessage(QString);
     void on_connectButton_clicked();

@@ -5,7 +5,7 @@
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    pModbus(nullptr)
+    pModbus(new ModBusRtu(this))
 {
     ui->setupUi(this);
 
@@ -34,9 +34,12 @@ void MainWindow::setupWindow() {
     settings = new AppSettings(this);
     settingsDialog = new SettingsDialog(this);
     pDataParser = nullptr;
-    pModbus = nullptr;
 
     readSettings();
+
+    pModbus->setAddress(settings->getAddress());
+    pModbus->setBaudRate(settings->getBaudRate());
+    pModbus->setPortName(settings->getPortName());
 
     bench = new DeviceForm(this);
     QGridLayout *benchLayout = new QGridLayout(ui->benchWidget);
@@ -111,16 +114,15 @@ void MainWindow::settingsChanged() {
 
 void MainWindow::onStateChanged(bool flag) {
     if(flag) {
-        portIsOpen = true;
-        buttonStateChanged(true);
+        pModbus->open(QIODevice::ReadWrite);
         qInfo() << "Port is open: " << settings->getPortName() + QString("   ") + QString::number(settings->getBaudRate()) + " bps";
     } else {
-        portIsOpen = false;
+        pModbus->close();
         buttonStateChanged(false);
         qInfo() << "Port is closed";
     }
 
-    bench->setWidgetEnable(portIsOpen);
+    bench->setWidgetEnable(pModbus->isOpen());
 }
 
 void MainWindow::buttonStateChanged(bool flag) {
@@ -132,7 +134,7 @@ void MainWindow::buttonStateChanged(bool flag) {
     }
 }
 
-void MainWindow::setDevParam(quint16 reg, quint16 value) {
+/*void MainWindow::setDevParam(quint16 reg, quint16 value) {
     bench->setLink(true);
 
     switch (reg) {
@@ -190,17 +192,15 @@ void MainWindow::setDevParam(quint16 reg, quint16 value) {
     default:
         break;
     }
-}
+}*/
 
 void MainWindow::onTimeout(quint8) {
     bench->setLink(false);
     errorMessage("Timeout");
-
 }
 
 
 void MainWindow::errorMessage(QString msg) {
-    link = false;
     ui->statusBar->showMessage(msg, STATUSBAR_MESSAGE_TIMEOUT);
     qInfo() << "Error message: " << msg;
 }
@@ -212,22 +212,18 @@ void MainWindow::on_connectButton_clicked()
     QString port = settings->getPortName();
     if(port.isEmpty()) return;
 
-    if(pModbus == nullptr) {
-        pModbus = new SerialPortHandler(this);
-        connect(pModbus, SIGNAL(stateChanged(bool)), this, SLOT(onStateChanged(bool)));
-        connect(pModbus, &SerialPortHandler::errorOccuredSignal, [this]() {
-            errorMessage(pModbus->errorString());
-        });
-        connect(pModbus, SIGNAL(timeoutSignal(quint8)), this, SLOT(onTimeout(quint8)));
-        connect(pModbus, SIGNAL(newDataIsReady(bool)), this, SLOT(readReady(bool)));
-    }
+
+    connect(pModbus, SIGNAL(stateChanged(bool)), this, SLOT(onStateChanged(bool)));
+    connect(pModbus, &ModBusRtu::errorOccurred, [this]() {
+        errorMessage(pModbus->errorString());
+    });
+    connect(pModbus, SIGNAL(timeoutSignal(quint8)), this, SLOT(onTimeout(quint8)));
+    connect(pModbus, SIGNAL(newDataIsReady(bool)), this, SLOT(readReady(bool)));
 
     if(pModbus->isOpen()) {
         pModbus->disconnect();
-        pModbus->deleteLater();
         ui->connectButton->setChecked(false);
     } else {
-        pModbus = new ModBusRtu(settings->getPortName(), settings->getBaudRate(), settings->getAddress(), this);
         pModbus->setTimeout(COM_TIMEOUT);
         if(!pModbus->isOpen()) {
             errorMessage(pModbus->errorString());

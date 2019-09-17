@@ -14,7 +14,7 @@
 const QString LOG_FILE = "protocol.log";
 
 const QString ORG_NAME = "FEDAL";
-const QString APP_NAME = "SingleWorkBench";
+const QString APP_NAME = "ModBus Emulator";
 const QString APP_TITLE = "FEDAL Modbus эмулятор";
 const quint32 MAJOR_VERSION = 1;
 const quint32 MINOR_VERSION = 0;
